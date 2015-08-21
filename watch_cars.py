@@ -32,6 +32,7 @@ class CarCrawler:
         return self.home_url + next_page_url
 
     def start_collecting_urls(self):
+        self.last_page_reached = False
         next_page_url = self.home_url
 
         self.init_file()
@@ -43,7 +44,7 @@ class CarCrawler:
                     next_page_url = self.collect_urls(next_page_url)
                 except IndexError:
                     print "\nCrawling stopped due to no next page button being present"
-                    break
+                    self.last_page_reached = True
 
             self.collect_cars()
             self.print_cars_to_file()
@@ -54,7 +55,7 @@ class CarCrawler:
             sys.stdout.write("\r Collected %i cars (%i%%)" % (self.car_count, round(percent)))
             sys.stdout.flush()
  
-            if self.car_count >= self.max_url_count:
+            if self.last_page_reached or self.car_count >= self.max_url_count:
                 print '\n'
                 self.complete_file()
                 return
@@ -90,7 +91,7 @@ class CarCrawler:
 class Car:
 
     def __init__(self, url, tree):
-        self.name = self.extract_data(tree, '//*[@class="ver30black"]/strong')
+        self.name = self.strip_xml_special_chars(self.extract_data(tree, '//*[@class="ver30black"]/strong'))
         self.url = url
         self.price = self.extract_price(self.extract_data(tree, '//*[@class="ver20black"]/strong'))
         self.year = 0
@@ -159,10 +160,13 @@ class Car:
         }.get(representation, 'N/A')
 
     def set_description(self):
-        self.description = self.description.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        self.description = self.strip_xml_special_chars(self.description)
+
+    def strip_xml_special_chars(self, input):
+        return input.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
     def __str__(self):
         return '<car>\n  <url>' + self.url + '</url>\n  <name>' + self.name + '</name>\n  <price>' + self.price + '</price>\n  <currency>' + self.currency + '</currency>\n  <production-date month="' + str(self.month) + '" year="' + str(self.year) + '"/>\n  <power>' + self.power + '</power>\n  <mileage>' + self.mileage + '</mileage>\n  <cubature>' + self.cubature + '</cubature>\n  <fuel>' + self.fuel + '</fuel>\n  <doors>' + self.doors + '</doors>\n  <transmission automatic="' + str(self.transmission) + '"/>\n  <color>' + self.colour + '</color>\n  <description>' + self.description + '</description>\n</car>'
 
-crawler = CarCrawler(70000, 'http://www.cars.bg/', 'http://www.cars.bg/?go=cars&search=1&advanced=&fromhomeu=1&CityId=0&currencyId=1&yearTo=&autotype=1&stateId=1&offerFrom4=1&offerFrom1=1&offerFrom2=1&offerFrom3=1&categoryId=0&doorId=0&brandId=0&modelId=0&fuelId=0&gearId=0&yearFrom=&priceFrom=&priceTo=&man_priceFrom=&man_priceTo=&regionId=0&conditionId=1&filterOrderBy=1&page=1')
+crawler = CarCrawler(100, 'http://www.cars.bg/', 'http://www.cars.bg/?go=cars&search=1&advanced=&fromhomeu=1&CityId=0&currencyId=1&yearTo=&autotype=1&stateId=1&offerFrom4=1&offerFrom1=1&offerFrom2=1&offerFrom3=1&categoryId=0&doorId=0&brandId=0&modelId=0&fuelId=0&gearId=0&yearFrom=&priceFrom=&priceTo=&man_priceFrom=&man_priceTo=&regionId=0&conditionId=1&filterOrderBy=1&page=1')
 crawler.start_collecting_urls()
