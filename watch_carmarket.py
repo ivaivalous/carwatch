@@ -99,7 +99,7 @@ class Car:
     def __init__(self, url, tree, index):
         self.index = index
         self.name = self.strip_xml_special_chars(self.extract_data(tree, '//span[@class="cmOffersListName"]'))
-        self.url = self.strip_xml_special_chars(url)
+        self.url = self.strip_xml_special_chars(url).split('?')[0]
         self.price = self.extract_price(self.extract_data(tree, '//strong[@itemprop="price"]'))
         self.year = 0
         self.month = 0
