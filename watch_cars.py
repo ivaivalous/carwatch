@@ -149,7 +149,7 @@ class Car:
             }.get(representation, 1)
 
     def is_transmission_automatic(self):
-        return self.transmission is 'Автоматични'
+        return self.transmission == 'Автоматични'
 
     def get_fuel_type(self, representation):
         return {
