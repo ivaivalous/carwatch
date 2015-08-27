@@ -4,9 +4,11 @@
 from __future__ import division
 import xml.etree.cElementTree as et
 import MySQLdb
-import sys, getopt
+import sys
+import getopt
 import warnings
 import ConfigParser
+
 
 class CarReader:
 
@@ -19,12 +21,12 @@ class CarReader:
         self.read_file()
         self.set_date()
         self.read_cars()
- 
+
     def read_file(self):
         with open(self.filename) as f:
             content = f.read()
             self.tree = et.fromstring(content)
-           
+
     def set_date(self):
         self.date = self.tree.attrib['collection-date']
 
@@ -34,13 +36,14 @@ class CarReader:
 
     def print_cars(self):
         for c in self.cars:
-            print c
-    
+            print(c)
+
 
 class DbImporter:
-    
+
     def __init__(self, db_host, db_port, db_username, db_password, db_name):
-        self.db = MySQLdb.connect(host=db_host, user=db_username, passwd=db_password, db=db_name)
+        self.db = MySQLdb.connect(host=db_host, user=db_username,
+                                  passwd=db_password, db=db_name)
         self.cursor = self.db.cursor()
         warnings.filterwarnings('error', category=MySQLdb.Warning)
         self.bad_cars = []
@@ -50,28 +53,29 @@ class DbImporter:
 
     def print_bad_data(self):
         if len(self.bad_cars) != 0:
-            print 'There were issues importing %i data entries. They may be incomplete in the DB.' % len(self.bad_cars)
+            print('There were issues importing {0} data entries. They '
+                  .format(len(self.bad_cars)) + 'may be incomplete in the DB.')
 
     def import_car(self, car):
         try:
             self.cursor.execute(
                 """INSERT INTO cars (
-                    carid, url, make, 
-                    name, price, production_month, 
-                    production_year, currency, power, 
-                    mileage, cubature, fuel, 
-                    doors, transmission_automatic, color, 
+                    carid, url, make,
+                    name, price, production_month,
+                    production_year, currency, power,
+                    mileage, cubature, fuel,
+                    doors, transmission_automatic, color,
                     description, date_collected, date_updated,
-                    siteid) 
+                    siteid)
                     VALUES (
-                        %s, %s, %s, 
-                        %s, %s, %s, 
-                        %s, %s, %s, 
-                        %s, %s, %s, 
-                        %s, %s, %s, 
+                        %s, %s, %s,
+                        %s, %s, %s,
+                        %s, %s, %s,
+                        %s, %s, %s,
+                        %s, %s, %s,
                         %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP,
                         %s)
-                    ON DUPLICATE KEY UPDATE 
+                    ON DUPLICATE KEY UPDATE
                         date_updated = CURRENT_TIMESTAMP,
                         make = VALUES(make),
                         name = VALUES(name),
@@ -81,34 +85,39 @@ class DbImporter:
                         cubature = VALUES(cubature),
                         fuel = VALUES(fuel),
                         doors = VALUES(doors),
-                        transmission_automatic = VALUES(transmission_automatic),
+                        transmission_automatic =
+                        VALUES(transmission_automatic),
                         color = VALUES(color),
-                        description = VALUES(description)""", 
-                (car.carid, car.url, car.make, 
-                car.name, car.price, car.production_month, 
-                car.production_year, car.currency, car.power,
-                car.mileage, car.cubature, car.fuel, 
-                car.doors, car.transmission, car.color, 
-                car.description, car.siteid))
+                        description = VALUES(description)""",
+                (car.carid, car.url, car.make,
+                 car.name, car.price, car.production_month,
+                 car.production_year, car.currency, car.power,
+                 car.mileage, car.cubature, car.fuel,
+                 car.doors, car.transmission, car.color,
+                 car.description, car.siteid))
         except:
             self.record_bad_data(car)
 
         self.db.commit()
 
     def print_progress(self, number_imported, number_total):
-        sys.stdout.write("\rImported %i/%i cars (%i%%)" % (number_imported, number_total, round((number_imported/number_total)*100)))
+        sys.stdout.write("\rImported {0}/{1} cars ({2}%%)"
+                         .format(number_imported, number_total,
+                                 round((number_imported/number_total)*100)))
+
         sys.stdout.flush()
-       
+
     def import_cars(self, cars):
         number_of_imported = 0
 
         for car in cars:
             self.import_car(car)
-            number_of_imported+=1
+            number_of_imported += 1
             self.print_progress(number_of_imported, len(cars))
 
     def close_db(self):
         self.db.close()
+
 
 class Car:
 
@@ -119,15 +128,22 @@ class Car:
         self.name = self.get_text('name')
         self.make = self.get_make()
         self.price = self.get_numeric(self.get_text('price'))
-        self.currency = 1 if self.get_text('currency') == 'BGN' else 0 
-        self.production_month = self.get_numeric(self.car_xml.find('production-date').attrib['month'])
-        self.production_year = self.get_numeric(car_xml.find('production-date').attrib['year'])
+        self.currency = 1 if self.get_text('currency') == 'BGN' else 0
+
+        self.production_month = self.get_numeric(
+            self.car_xml.find('production-date').attrib['month'])
+
+        self.production_year = self.get_numeric(
+            car_xml.find('production-date').attrib['year'])
+
         self.power = self.get_numeric(self.get_text('power'))
         self.mileage = self.get_numeric(self.get_text('mileage'))
         self.cubature = self.get_numeric(self.get_text('cubature'))
         self.fuel = self.get_text('fuel')
         self.doors = self.get_text('doors')
-        self.transmission = car_xml.find('transmission').attrib['automatic'] == 'True'
+        self.transmission = (car_xml.find('transmission')
+                             .attrib['automatic'] == 'True')
+
         self.color = self.get_text('color')
         self.description = self.get_text('description')
 
@@ -176,33 +192,33 @@ class Car:
     def __str__(self):
         return '\nURL: ' + self.url + '\nNAME: ' + self.name
 
-def main(argv): 
+
+def main(argv):
     config = ConfigParser.RawConfigParser()
     config.read('carwatch.ini')
-    
+
     db_host = config.get('DatabaseConfig', 'db.host')
     db_port = config.get('DatabaseConfig', 'db.port')
-    db_user = config.get('DatabaseConfig', 'db.user') 
-    db_password = config.get('DatabaseConfig', 'db.password') 
+    db_user = config.get('DatabaseConfig', 'db.user')
+    db_password = config.get('DatabaseConfig', 'db.password')
     db_name = config.get('DatabaseConfig', 'db.name')
-    
+
     input = ''
 
-    opts, args = getopt.getopt(argv,"i:")
+    opts, args = getopt.getopt(argv, "i:")
 
     for opt, arg in opts:
-      if opt == "-i":
-         input = arg
+        if opt == "-i":
+            input = arg
 
-    print 'Loading input XML.'
+    print('Loading input XML.')
     reader = CarReader(input)
-    print 'Loaded ' + str(len(reader.cars)) + ' cars.'
+    print('Loaded ' + str(len(reader.cars)) + ' cars.')
     db_connection = DbImporter(db_host, db_port, db_user, db_password, db_name)
     db_connection.import_cars(reader.cars)
-    print '\nImported into DB.'
+    print('\nImported into DB.')
     db_connection.print_bad_data()
 
-      
-if __name__ == "__main__":
-   main(sys.argv[1:])
 
+if __name__ == "__main__":
+    main(sys.argv[1:])
