@@ -91,6 +91,7 @@ class DigestData:
 
     def __init__(self):
         self.lines = []
+        self.brands = BrandList()
 
     def add_line(self, make, power, price, mileage):
         line = DigestLine(make, power, price, mileage)
@@ -114,6 +115,52 @@ class DigestData:
                 valid_prices.append(l.price)
 
         return sum(valid_prices) / len(valid_prices)
+
+    def populate_brands(self):
+        for line in self.lines:
+            if line not in self.brands:
+                self.brands.merge(line)
+            else:
+                self.brands.brands_list.append(Brand([line]))
+
+
+class Brand:
+
+    def __init__(self, digest_lines):
+        self.brand_name = digest_lines[0].make
+        self.percentage = 0
+        self.digest_lines = digest_lines
+
+    def get_total_count(self):
+        return len(self.digest_lines)
+
+    def __str__(self):
+        return '{0} - count: {1}'.format(self.brand_name, self.get_total_count)
+
+
+class BrandList:
+
+    def __init__(self):
+        self.brands_list = []
+
+    def __contains__(self, digest_line):
+        return digest_line.make in self.get_brand_names()
+
+    def get_brand_names(self):
+        return [brand.brand_name for brand in self.brands_list]
+
+    def merge(self, digest_line):
+        for brand in self.brands_list:
+            if brand.brand_name == digest_line.make:
+                brand.digest_lines.append(digest_line)
+
+    def __str__(self):
+        representation = 'Brands data:\n'
+
+        for brand in self.brands_list:
+            representation += str(brand)
+
+        return representation
 
 
 class DigestLine:
@@ -147,6 +194,10 @@ def main(digest_mode):
                                 start_year, end_month, end_year)
 
     generator.collect_car_data(digest_mode)
+
+    for digest in generator.digest_data:
+        digest.populate_brands()
+        print(digest.brands)
 
     for data_record in generator.digest_data:
         print("Average horsepower: " + str(data_record.get_avg_power()))
