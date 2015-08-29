@@ -117,11 +117,14 @@ class DigestData:
         return sum(valid_prices) / len(valid_prices)
 
     def populate_brands(self):
+        print("There are " + str(len(self.lines)) +
+              " lines attached to this data.")
         for line in self.lines:
-            if line not in self.brands:
+            if line in self.brands:
                 self.brands.merge(line)
             else:
-                self.brands.brands_list.append(Brand([line]))
+                brand_to_pass = Brand([line])
+                self.brands.brands_list.append(brand_to_pass)
 
 
 class Brand:
@@ -129,13 +132,18 @@ class Brand:
     def __init__(self, digest_lines):
         self.brand_name = digest_lines[0].make
         self.percentage = 0
+        self.total = len(digest_lines)
         self.digest_lines = digest_lines
 
     def get_total_count(self):
         return len(self.digest_lines)
 
+    def set_total_of_cars(self, total):
+        self.total = total
+
     def __str__(self):
-        return '{0} - count: {1}'.format(self.brand_name, self.get_total_count)
+        return '{0} - count: {1}\n'.format(
+            self.brand_name, self.get_total_count())
 
 
 class BrandList:
