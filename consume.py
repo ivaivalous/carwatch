@@ -172,6 +172,7 @@ class Car:
     def get_make(self):
         make_temp = self.name.split(' ')[0]
 
+        # TODO replace this
         if make_temp == 'Alfa':
             return 'Alfa Romeo'
         elif make_temp == 'Rolls':
@@ -186,6 +187,20 @@ class Car:
             return 'Great Wall'
         elif make_temp == 'Range':
             return 'Range Rover'
+        elif make_temp == 'Vw':
+            return 'VW'
+        elif make_temp == 'Mercedes':
+            return 'Mercedes-Benz'
+        elif make_temp == 'Gaz':
+            return 'GAZ'
+        elif make_temp == 'Uaz':
+            return 'UAZ'
+        elif make_temp == 'Gmc':
+            return 'GMC'
+        elif make_temp == 'Mg':
+            return 'MG'
+        elif make_temp == 'Ssangyong':
+            return 'SsangYong'
         else:
             return make_temp
 
