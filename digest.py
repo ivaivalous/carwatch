@@ -66,7 +66,7 @@ class DigestGenerator:
 
         self.cursor.execute(
             """select
-            make, power, price, mileage
+            make, power, price, mileage, production_month, production_year
             from cars where date_added between %s and %s or
             (date_added < %s and (active = 1 or date_deactivated < %s))
             order by make asc;""",
@@ -78,10 +78,19 @@ class DigestGenerator:
             power = row[1]
             price = row[2]
             mileage = row[3]
+            prod_date = self.get_date_by_year_month(row[4], row[5])
 
-            digest_data_record.add_line(make, power, price, mileage)
+            digest_data_record.add_line(make, power, price, mileage, prod_date)
 
         return digest_data_record
+
+    def get_date_by_year_month(self, month, year):
+        try:
+            return datetime.strptime(
+                '{0}-{1}'.format(year, month), '%Y-%m')
+        except ValueError:
+            # No valid production date was available
+            return datetime.now()
 
     def close_db(self):
         self.db.close()
@@ -93,8 +102,8 @@ class DigestData:
         self.lines = []
         self.brands = BrandList()
 
-    def add_line(self, make, power, price, mileage):
-        line = DigestLine(make, power, price, mileage)
+    def add_line(self, make, power, price, mileage, prod_date):
+        line = DigestLine(make, power, price, mileage, prod_date)
         self.lines.append(line)
 
     def get_avg_power(self):
@@ -102,7 +111,7 @@ class DigestData:
 
         for l in self.lines:
             # Because some sellers set random numbers like 70000000
-            if l.power >= 10 and l.power <= 1200:
+            if l.power >= 10 and l.power <= 800:
                 valid_powers.append(l.power)
 
         return sum(valid_powers) / len(valid_powers)
@@ -126,6 +135,8 @@ class DigestData:
                 brand_to_pass = Brand([line])
                 self.brands.brands_list.append(brand_to_pass)
 
+        self.brands.set_total_of_cars(len(self.lines))
+
 
 class Brand:
 
@@ -135,15 +146,52 @@ class Brand:
         self.total = len(digest_lines)
         self.digest_lines = digest_lines
 
+    def set_total(self, total):
+        self.total = total
+
     def get_total_count(self):
         return len(self.digest_lines)
+
+    def get_percentage(self, round_result=True):
+        if self.total is not 0:
+            percentage = (len(self.digest_lines) / self.total) * 100
+            return round(percentage, 4) if round_result else percentage
+        else:
+            return 0
+
+    def get_avg_power(self):
+        refined = [line.power for line in self.digest_lines]
+
+        for power in refined:
+            if power < 10 or power > 800:
+                refined.remove(power)
+
+        if refined:
+            return round(sum(refined) / len(refined))
+        else:
+            # No cars were present with valid power
+            return 0
+
+    def get_max_power(self):
+        return sorted(
+            [line.power for line in self.digest_lines if line.power < 800],
+            reverse=True)[0]
+
+    def get_avg_age(self):
+        ages = [line.get_age() for line in self.digest_lines]
+
+        return round(((sum(ages) / len(ages)) / 365.25), 1)
 
     def set_total_of_cars(self, total):
         self.total = total
 
     def __str__(self):
-        return '{0} - count: {1}\n'.format(
-            self.brand_name, self.get_total_count())
+        return ('{0}\n\tCount:         {1}% ({2} cars)\n\t' +
+                'Average power: {3} ' +
+                'HP (max {4})\n\tAverage age:   {5} years\n').format(
+            self.brand_name, self.get_percentage(), self.get_total_count(),
+            self.get_avg_power(), self.get_max_power(),
+            self.get_avg_age())
 
 
 class BrandList:
@@ -162,10 +210,17 @@ class BrandList:
             if brand.brand_name == digest_line.make:
                 brand.digest_lines.append(digest_line)
 
+    def set_total_of_cars(self, total):
+        for brand in self.brands_list:
+            brand.set_total_of_cars(total)
+
     def __str__(self):
         representation = 'Brands data:\n'
 
-        for brand in self.brands_list:
+        for brand in sorted(
+                self.brands_list,
+                key=lambda brand: brand.get_percentage(False),
+                reverse=True):
             representation += str(brand)
 
         return representation
@@ -173,11 +228,15 @@ class BrandList:
 
 class DigestLine:
 
-    def __init__(self, make, power, price, mileage):
+    def __init__(self, make, power, price, mileage, prod_date):
         self.make = make
         self.power = power
         self.price = price
         self.mileage = mileage
+        self.prod_date = prod_date
+
+    def get_age(self):
+        return (datetime.now() - self.prod_date).days
 
 
 def main(digest_mode):
