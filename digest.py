@@ -172,6 +172,15 @@ class Brand:
             # No cars were present with valid power
             return 0
 
+    def get_avg_price(self):
+        refined = [line.price for line in self.digest_lines]
+
+        if refined:
+            return round(sum(refined) / len(refined))
+        else:
+            # No cars were present with valid price
+            return 0
+
     def get_max_power(self):
         return sorted(
             [line.power for line in self.digest_lines if line.power < 800],
@@ -187,10 +196,11 @@ class Brand:
 
     def __str__(self):
         return ('{0}\n\tCount:         {1}% ({2} cars)\n\t' +
-                'Average power: {3} ' +
-                'HP (max {4})\n\tAverage age:   {5} years\n').format(
+                'Average price: {3} BGN\n\t' +
+                'Average power: {4} ' +
+                'HP (max {5})\n\tAverage age:   {6} years\n').format(
             self.brand_name, self.get_percentage(), self.get_total_count(),
-            self.get_avg_power(), self.get_max_power(),
+            self.get_avg_price(), self.get_avg_power(), self.get_max_power(),
             self.get_avg_age())
 
 
