@@ -8,6 +8,7 @@ import sys
 from time import gmtime, strftime
 import re
 import ConfigParser
+import time
 
 
 class CarCrawler:
@@ -28,8 +29,15 @@ class CarCrawler:
         self.page = None
         self.tree = None
 
-    def collect_urls(self, url):
-        self.page = requests.get(url, headers=self.headers)
+    def collect_urls(self, url, retry=True):
+        try:
+            self.page = requests.get(url, headers=self.headers)
+        except requests.exceptions.ConnectionError:
+            if retry:
+                # Counter connection issues
+                time.sleep(15)
+                self.collect_urls(url, retry=False)
+
         self.tree = html.fromstring(self.page.text)
         self.urls.extend(self.tree.xpath(
             "//a[@class='cmOffersListLink']/@href"))

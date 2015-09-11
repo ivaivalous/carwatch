@@ -17,7 +17,7 @@ class UrlController:
             """SELECT id, url
             FROM carwatch.cars
             WHERE active = 1
-            AND DATE(date_updated) <= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
+            AND DATE(date_updated) <= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
             LIMIT 100000;""")
 
         results = self.cursor.fetchall()
