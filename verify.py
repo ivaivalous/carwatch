@@ -90,7 +90,7 @@ class Verifier:
 
         # Car websites don't usually 404 cars they've had removed
         # rather they 302 them for some reason
-        if r.status_code == 302 or r.status_code is 404:
+        if r.status_code == 302 or r.status_code == 404:
             print("Car with URL {0} was inactive.".format(url))
             return False
 
