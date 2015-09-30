@@ -7,6 +7,8 @@ import sys
 import getopt
 import ConfigParser
 from datetime import datetime
+import json
+from json import encoder
 
 
 class DigestGenerator:
@@ -62,7 +64,7 @@ class DigestGenerator:
         m_symbol = month_index if month_index > 9 else '0' + str(month_index)
         mindate = '%i-%s-01' % (year_index, m_symbol)
         maxdate = '%i-%s-31' % (year_index, m_symbol)
-        digest_data_record = DigestData()
+        digest_data_record = DigestData(year_index, month_index)
 
         self.cursor.execute(
             """select
@@ -98,9 +100,11 @@ class DigestGenerator:
 
 class DigestData:
 
-    def __init__(self):
+    def __init__(self, year, month):
         self.lines = []
-        self.brands = BrandList()
+        self.brands = BrandList(year, month)
+        self.year = year
+        self.month = month
 
     def add_line(self, make, power, price, mileage, prod_date):
         line = DigestLine(make, power, price, mileage, prod_date)
@@ -203,11 +207,22 @@ class Brand:
             self.get_avg_price(), self.get_avg_power(), self.get_max_power(),
             self.get_avg_age())
 
+    def get_json(self):
+        return {
+            "name": self.brand_name,
+            "percentage": self.get_percentage(),
+            "averagePrice": self.get_avg_price(),
+            "averagePower": self.get_avg_power(),
+            "averageAge": self.get_avg_age()
+            }
+
 
 class BrandList:
 
-    def __init__(self):
+    def __init__(self, year, month):
         self.brands_list = []
+        self.year = year
+        self.month = month
 
     def __contains__(self, digest_line):
         return digest_line.make in self.get_brand_names()
@@ -234,6 +249,35 @@ class BrandList:
             representation += str(brand)
 
         return representation
+
+    def get_json(self):
+        representation = {
+            "month": self.month,
+            "year": self.year,
+            "brands": []
+        }
+
+        for brand in sorted(
+                self.brands_list,
+                key=lambda brand: brand.get_percentage(False),
+                reverse=True):
+            if(brand.get_total_count() >= self.min_cutoff):
+                representation["brands"].append(brand.get_json())
+
+        return representation
+
+    def save_json_to_file(self, min_cutoff):
+        # Cars that are under a certain number in count will not be included
+        # in reports because data might be off
+        # also cars might become identifiable
+        self.min_cutoff = min_cutoff
+        filename = 'digest-{0}-{1}.json'.format(self.year, self.month)
+
+        with open(filename, 'w') as outfile:
+                encoder.FLOAT_REPR = lambda o: format(o, '.2f')
+                json.dump(
+                    self.get_json(), outfile, sort_keys=True,
+                    indent=4, separators=(',', ': '))
 
 
 class DigestLine:
@@ -262,6 +306,7 @@ def main(digest_mode):
 
     start_month = int(config.get('DigestConfig', 'digest.start_month'))
     start_year = int(config.get('DigestConfig', 'digest.start_year'))
+    min_cutoff = int(config.get('DigestConfig', 'digest.min_count_cutoff'))
 
     end_month = datetime.now().month
     end_year = datetime.now().year
@@ -275,6 +320,7 @@ def main(digest_mode):
     for digest in generator.digest_data:
         digest.populate_brands()
         print(digest.brands)
+        digest.brands.save_json_to_file(min_cutoff)
 
     for data_record in generator.digest_data:
         print("Average horsepower: " + str(data_record.get_avg_power()))
