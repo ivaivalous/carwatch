@@ -154,7 +154,7 @@ class Car:
         self.description = 'N/A'
 
         self.prod_date = self.extract_data(
-            tree, "//*[@class='cmOffersListYear']/text()")
+            tree, "//*[@class='cmOffersListYear']", True)
 
         self.set_production_date()
         self.set_description()
@@ -164,9 +164,17 @@ class Car:
     def set_xml_template(self, xml_template):
         self.xml_template = xml_template
 
-    def extract_data(self, tree, xpath):
+    def extract_data(self, tree, xpath, use_content=False):
+        encoding = "utf-8"
+        text = None
+
         try:
-            return tree.xpath(xpath)[self.index].text.encode("utf-8").strip()
+            if use_content is True:
+                text = tree.xpath(xpath)[self.index].text
+            else:
+                text = tree.xpath(xpath)[self.index].text_content()
+
+            return text.encode(encoding).strip()
         except (IndexError, AttributeError):
             return 'N/A'
 
