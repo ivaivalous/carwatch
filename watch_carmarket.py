@@ -153,6 +153,9 @@ class Car:
         # No car description is present on this page
         self.description = 'N/A'
 
+        self.prod_date = self.extract_data(
+            tree, "//*[@class='cmOffersListYear']")
+
         self.set_production_date()
         self.set_description()
         self.transmission = self.is_transmission_automatic()
