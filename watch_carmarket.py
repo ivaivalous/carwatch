@@ -190,7 +190,6 @@ class Car:
             self.year = self.prod_date.replace(
                 self.month_raw, '').split(' ')[0]
 
-            print(self.month_raw + "/" + self.year)
             self.month = self.get_month(self.month_raw)
         except:
             pass
