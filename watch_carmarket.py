@@ -154,7 +154,7 @@ class Car:
         self.description = 'N/A'
 
         self.prod_date = self.extract_data(
-            tree, "//*[@class='cmOffersListYear']")
+            tree, "//*[@class='cmOffersListYear']/text()")
 
         self.set_production_date()
         self.set_description()
