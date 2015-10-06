@@ -55,6 +55,7 @@ class CarCrawler:
                 next_page_url = self.collect_urls(next_page_url)
             except IndexError:
                 try:
+                    time.sleep(5)
                     next_page_url = self.collect_urls(next_page_url)
                 except IndexError:
                     print("\nCrawling stopped due to no next " +
