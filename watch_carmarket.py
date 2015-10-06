@@ -68,7 +68,7 @@ class CarCrawler:
             self.cars = []
 
             percent = (self.car_count / self.max_url_count) * 100
-            sys.stdout.write("\r Collected {0} cars ({1}%%)"
+            sys.stdout.write("\r Collected {0} cars ({1}%)"
                              .format(self.car_count, round(percent)))
             sys.stdout.flush()
 
@@ -154,7 +154,7 @@ class Car:
         self.description = 'N/A'
 
         self.prod_date = self.extract_data(
-            tree, "//*[@class='cmOffersListYear']", True)
+            tree, "//*[@class='cmOffersListYear']", False)
 
         self.set_production_date()
         self.set_description()
@@ -164,7 +164,7 @@ class Car:
     def set_xml_template(self, xml_template):
         self.xml_template = xml_template
 
-    def extract_data(self, tree, xpath, use_content=False):
+    def extract_data(self, tree, xpath, use_content=True):
         encoding = "utf-8"
         text = None
 
@@ -172,7 +172,7 @@ class Car:
             if use_content is True:
                 text = tree.xpath(xpath)[self.index].text
             else:
-                text = tree.xpath(xpath)[self.index].text_content()
+                text = ''.join(tree.xpath(xpath)[self.index].itertext())
 
             return text.encode(encoding).strip()
         except (IndexError, AttributeError):
@@ -187,9 +187,10 @@ class Car:
     def set_production_date(self):
         try:
             self.month_raw = re.compile('\d+').split(self.prod_date)[0]
-            self.year = self.prod_date.replace(self.month_raw, '').split(' ')
-            [0]
+            self.year = self.prod_date.replace(
+                self.month_raw, '').split(' ')[0]
 
+            print(self.month_raw + "/" + self.year)
             self.month = self.get_month(self.month_raw)
         except:
             pass
