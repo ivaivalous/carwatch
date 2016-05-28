@@ -68,7 +68,13 @@ class CarCrawler:
     def collect_cars(self):
         for url in self.urls:
             full_url = self.root_url + url
-            page = requests.get(full_url, headers=self.headers)
+
+            try:
+                page = requests.get(full_url, headers=self.headers)
+            except requests.exceptions.ConnectionError:
+                print("Failed loading URL " + full_url + ". Skipping.")
+                continue
+
             tree = html.fromstring(page.text)
             car = Car(full_url, tree)
             car.set_xml_template(self.xml_template)
