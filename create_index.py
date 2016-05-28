@@ -21,9 +21,9 @@ class Lister:
         self.list()
 
         with open('index.json', 'w') as outfile:
-                json.dump(
-                    self.files, outfile, sort_keys=True,
-                    indent=4, separators=(',', ': '))
+            json.dump(
+                self.files, outfile, sort_keys=True,
+                indent=4, separators=(',', ': '))
 
 
 def main(path):

@@ -99,8 +99,8 @@ class CarCrawler:
     def init_file(self):
         with open(self.filename, 'w') as f:
             print >>f, (
-                 '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
-                 '<cars collection-date="' + self.execution_time + '">')
+                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+                '<cars collection-date="' + self.execution_time + '">')
 
     def complete_file(self):
         with open(self.filename, 'a') as f:
@@ -133,10 +133,10 @@ class Car:
                 tree, '//*[@class="cmOffersListMoreInfoRow"][2]/strong'))
 
         self.mileage = self.extract_num(
-            self.extract_price(
-                self.extract_data(
-                    tree, '//*[@class="cmOffersListMoreInfoRow"][4]/strong'))
-            ).replace('км', '')
+            self.extract_price(self.extract_data(
+                tree,
+                '//*[@class="cmOffersListMoreInfoRow"][4]/strong')).replace(
+                    u'км', ''))
 
         self.cubature = '-1'
         self.fuel = self.extract_data(

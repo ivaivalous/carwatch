@@ -89,8 +89,8 @@ class CarCrawler:
     def init_file(self):
         with open(self.filename, 'w') as f:
             print >>f, (
-                 '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
-                 '<cars collection-date="' + self.execution_time + '">')
+                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+                '<cars collection-date="' + self.execution_time + '">')
 
     def complete_file(self):
         with open(self.filename, 'a') as f:

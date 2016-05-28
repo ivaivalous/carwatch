@@ -32,12 +32,12 @@ class DigestGenerator:
 
     def verify_valid_dates(self):
         if self.start_year > self.end_year or (
-            self.start_year == self.end_year
-               and self.start_month > self.end_month):
+            self.start_year == self.end_year and
+                self.start_month > self.end_month):
 
             raise ValueError('TO date %d.%d is prior to FROM date %d.%d.' (
-                    self.end_month, self.end_year, self.start_month,
-                    self.end_month))
+                self.end_month, self.end_year, self.start_month,
+                self.end_month))
 
     def collect_car_data(self, digest_mode):
         if digest_mode == "current":
@@ -214,7 +214,7 @@ class Brand:
             "averagePrice": self.get_avg_price(),
             "averagePower": self.get_avg_power(),
             "averageAge": self.get_avg_age()
-            }
+        }
 
 
 class BrandList:

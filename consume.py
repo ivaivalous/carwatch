@@ -101,9 +101,11 @@ class DbImporter:
         self.db.commit()
 
     def print_progress(self, number_imported, number_total):
-        sys.stdout.write("\rImported {0}/{1} cars ({2}%%)"
-                         .format(number_imported, number_total,
-                                 round((number_imported/number_total)*100)))
+        sys.stdout.write(
+            "\rImported {0}/{1} cars ({2}%%)".format(
+                number_imported,
+                number_total,
+                round((number_imported / number_total) * 100)))
 
         sys.stdout.flush()
 
