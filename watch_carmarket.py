@@ -10,6 +10,8 @@ import re
 import ConfigParser
 import time
 
+ENCODING = 'utf-8'
+
 
 class CarCrawler:
 
@@ -135,8 +137,9 @@ class Car:
         self.mileage = self.extract_num(
             self.extract_price(self.extract_data(
                 tree,
-                '//*[@class="cmOffersListMoreInfoRow"][4]/strong')).replace(
-                    'км'.decode('utf-8'), ''))
+                '//*[@class="cmOffersListMoreInfoRow"][4]/strong')).decode(
+                    ENCODING).replace(
+                        'км'.decode(ENCODING), ''))
 
         self.cubature = '-1'
         self.fuel = self.extract_data(
