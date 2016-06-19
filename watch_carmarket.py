@@ -15,6 +15,29 @@ ENCODING = 'utf-8'
 
 class CarCrawler:
 
+    RECONNECT_INTERVAL = 15
+
+    EXECUTION_TIME_FORMAT = "%Y-%m-%d-%H-%M-%S"
+
+    CAR_CONTAINERS_XPATH = '/div[contains(@class, "cmOffersListItem")]'
+    CAR_URLS_XPATH = "//a[@class='cmOffersListLink']/@href"
+    NEXT_PAGE_URL_XPATH = "//li[@class='next']/a/@href"
+    CAR_LISTED_NAME_XPATH = '//span[@class="cmOffersListName"]'
+    CAR_PRICE_XPATH = '//strong[@itemprop="price"]'
+    CAR_CURRENCY_XPATH = '//*[@itemprop="priceCurrency"]'
+    CAR_HP_XPATH = '//*[@class="cmOffersListMoreInfoRow"][2]/strong'
+    CAR_MILEAGE_XPATH = '//*[@class="cmOffersListMoreInfoRow"][4]/strong'
+    CAR_FUELTYPE_XPATH = '//*[@class="cmOffersListMoreInfoRow"][1]/strong'
+    CAR_TRANSMISSION_TYPE_XPATH = (
+        '//*[@class="cmOffersListMoreInfoRow"][3]/strong')
+    CAR_COLOUR_XPATH = '//*[@class="cmOffersListMoreInfoRow"][5]/strong'
+    CAR_PRODUCTION_DATE_XPATH = "//*[@class='cmOffersListYear']"
+
+    KILLOMETER_DESIGNATOR = u'км'
+    DEFAULT_VOLUME = '-1'
+    DEFAULT_DOOR_COUNT = 'N/A'
+    DEFAULT_DESCRIPTION = 'N/A'
+
     def __init__(self, max_url_count, root_url, home_url, config):
         self.xml_template = config.get('CrawlXmlConfig', 'crawl.xml_template')
         self.max_url_count = max_url_count
@@ -26,7 +49,8 @@ class CarCrawler:
             'User-Agent': config.get('CrawlGeneralConfig', 'crawl.useragent')
         }
         self.car_count = 0
-        self.execution_time = strftime("%Y-%m-%d-%H-%M-%S", gmtime())
+        self.execution_time = strftime(
+            CarCrawler.EXECUTION_TIME_FORMAT, gmtime())
         self.filename = './carsm-' + self.execution_time + '.xml'
         self.page = None
         self.tree = None
@@ -37,14 +61,14 @@ class CarCrawler:
         except requests.exceptions.ConnectionError:
             if retry:
                 # Counter connection issues
-                time.sleep(15)
+                time.sleep(CarCrawler.RECONNECT_INTERVAL)
                 self.collect_urls(url, retry=False)
 
         self.tree = html.fromstring(self.page.text)
         self.urls.extend(self.tree.xpath(
-            "//a[@class='cmOffersListLink']/@href"))
+            CarCrawler.CAR_URLS_XPATH))
 
-        next_page_url = self.tree.xpath("//li[@class='next']/a/@href")[0]
+        next_page_url = self.tree.xpath(CarCrawler.NEXT_PAGE_URL_XPATH)[0]
         return next_page_url
 
     def start_collecting_urls(self):
@@ -81,7 +105,7 @@ class CarCrawler:
 
     def collect_cars(self):
         car_containers = self.tree.xpath(
-            '//div[contains(@class, "cmOffersListItem")]')
+            CarCrawler.CAR_CONTAINERS_XPATH)
         index = 0
 
         for car_container in car_containers:
@@ -120,44 +144,45 @@ class Car:
     def __init__(self, url, tree, index):
         self.index = index
         self.name = self.strip_xml_special_chars(
-            self.extract_data(tree, '//span[@class="cmOffersListName"]'))
+            self.extract_data(tree, CarCrawler.CAR_LISTED_NAME_XPATH))
         self.url = self.strip_xml_special_chars(url).split('?')[0]
         self.price = self.extract_price(
-            self.extract_data(tree, '//strong[@itemprop="price"]'))
+            self.extract_data(tree, CarCrawler.CAR_PRICE_XPATH))
         self.year = 0
         self.month = 0
 
         self.currency = self.extract_data(
-            tree, '//*[@itemprop="priceCurrency"]')
+            tree, CarCrawler.CAR_CURRENCY_XPATH)
 
         self.power = self.extract_num(
             self.extract_data(
-                tree, '//*[@class="cmOffersListMoreInfoRow"][2]/strong'))
+                tree, CarCrawler.CAR_HP_XPATH))
 
         self.mileage = self.extract_num(
             self.extract_price(self.extract_data(
                 tree,
-                '//*[@class="cmOffersListMoreInfoRow"][4]/strong')).decode(
+                CarCrawler.CAR_MILEAGE_XPATH)).decode(
                     ENCODING).replace(
-                        'км'.decode(ENCODING), ''))
+                        CarCrawler.KILLOMETER_DESIGNATOR.decode(
+                            ENCODING), ''))
 
-        self.cubature = '-1'
+        self.cubature = CarCrawler.DEFAULT_VOLUME
         self.fuel = self.extract_data(
-            tree, '//*[@class="cmOffersListMoreInfoRow"][1]/strong')
+            tree, CarCrawler.CAR_FUELTYPE_XPATH)
 
         # Doors count not present on this page
-        self.doors = 'N/A'
+        self.doors = CarCrawler.DEFAULT_DOOR_COUNT
         self.transmission = self.extract_data(
-            tree, '//*[@class="cmOffersListMoreInfoRow"][3]/strong')
+            tree, CarCrawler.CAR_TRANSMISSION_TYPE_XPATH)
 
         self.colour = self.extract_data(
-            tree, '//*[@class="cmOffersListMoreInfoRow"][5]/strong')
+            tree, CarCrawler.CAR_COLOUR_XPATH)
 
         # No car description is present on this page
-        self.description = 'N/A'
+        self.description = CarCrawler.DEFAULT_DESCRIPTION
 
         self.prod_date = self.extract_data(
-            tree, "//*[@class='cmOffersListYear']", False)
+            tree, CarCrawler.CAR_PRODUCTION_DATE_XPATH, False)
 
         self.set_production_date()
         self.set_description()
@@ -168,7 +193,7 @@ class Car:
         self.xml_template = xml_template
 
     def extract_data(self, tree, xpath, use_content=True):
-        encoding = "utf-8"
+        encoding = ENCODING
         text = None
 
         try:
@@ -237,7 +262,8 @@ class Car:
             self.currency, str(self.month), str(self.year),
             self.power, self.mileage, self.cubature,
             self.fuel, self.doors, str(self.transmission),
-            self.colour, self.description))
+            self.colour.encode(ENCODING),
+            self.description.encode(ENCODING)))
 
 
 def main():
