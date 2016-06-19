@@ -136,7 +136,7 @@ class Car:
             self.extract_price(self.extract_data(
                 tree,
                 '//*[@class="cmOffersListMoreInfoRow"][4]/strong')).replace(
-                    u'км', ''))
+                    'км'.decode('utf-8'), ''))
 
         self.cubature = '-1'
         self.fuel = self.extract_data(
