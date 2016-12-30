@@ -210,7 +210,9 @@ class Car:
         if isinstance(price_raw, list):
             return self.extract_price(price_raw[0])
 
-        return price_raw.replace(',', '').replace(' ', '').encode(ENCODING)
+        print(str(price_raw))
+
+        return price_raw.replace(',', '').replace(' ', '')
 
     def extract_num(self, raw_field):
         return raw_field.split(' ')[0].replace(',', '')
