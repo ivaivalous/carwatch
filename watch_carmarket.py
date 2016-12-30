@@ -169,8 +169,7 @@ class Car:
         self.transmission = self.extract_data(
             tree, CarCrawler.CAR_TRANSMISSION_TYPE_XPATH)
 
-        self.colour = self.extract_data(
-            tree, CarCrawler.CAR_COLOUR_XPATH)
+        self.colour = 'N/A'
 
         # No car description is present on this page
         self.description = CarCrawler.DEFAULT_DESCRIPTION
