@@ -26,7 +26,7 @@ class CarCrawler:
     CAR_PRICE_XPATH = '//strong[@itemprop="price"]'
     CAR_CURRENCY_XPATH = '//*[@itemprop="priceCurrency"]'
     CAR_HP_XPATH = '//*[@class="cmOffersListMoreInfoRow"][2]/strong'
-    CAR_MILEAGE_XPATH = '//*[@class="cmOffersListMoreInfoRow"][4]/strong'
+    CAR_MILEAGE_XPATH = '//*[@class="cmOffersListMoreInfoRow"][3]/strong'
     CAR_FUELTYPE_XPATH = '//*[@class="cmOffersListMoreInfoRow"][1]/strong'
     CAR_TRANSMISSION_TYPE_XPATH = (
         '//*[@class="cmOffersListMoreInfoRow"][3]/strong')
@@ -207,6 +207,9 @@ class Car:
             return 'N/A'
 
     def extract_price(self, price_raw):
+        if isinstance(price_raw, list):
+            return self.extract_price(price_raw[0])
+
         return price_raw.replace(',', '').replace(' ', '')
 
     def extract_num(self, raw_field):
