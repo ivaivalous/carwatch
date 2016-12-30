@@ -158,13 +158,7 @@ class Car:
             self.extract_data(
                 tree, CarCrawler.CAR_HP_XPATH))
 
-        self.mileage = self.extract_num(
-            self.extract_price(self.extract_data(
-                tree,
-                CarCrawler.CAR_MILEAGE_XPATH)).decode(
-                    ENCODING).replace(
-                        CarCrawler.KILLOMETER_DESIGNATOR.decode(
-                            ENCODING), ''))
+        self.mileage = 'N/A'
 
         self.cubature = CarCrawler.DEFAULT_VOLUME
         self.fuel = self.extract_data(
