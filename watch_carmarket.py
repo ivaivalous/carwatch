@@ -158,16 +158,13 @@ class Car:
             self.extract_data(
                 tree, CarCrawler.CAR_HP_XPATH))
 
-        try:
-            self.mileage = self.extract_num(
-                self.extract_price(self.extract_data(
-                    tree,
-                    CarCrawler.CAR_MILEAGE_XPATH)).decode(
-                        ENCODING).replace(
-                            CarCrawler.KILLOMETER_DESIGNATOR.decode(
-                                ENCODING), ''))
-        except:
-            self.mileage = 'N/A'
+        self.mileage = self.extract_num(
+            self.extract_price(self.extract_data(
+                tree,
+                CarCrawler.CAR_MILEAGE_XPATH)).decode(
+                    ENCODING).replace(
+                        CarCrawler.KILLOMETER_DESIGNATOR.decode(
+                            ENCODING), ''))
 
         self.cubature = CarCrawler.DEFAULT_VOLUME
         self.fuel = self.extract_data(
@@ -213,7 +210,7 @@ class Car:
         if isinstance(price_raw, list):
             return self.extract_price(price_raw[0])
 
-        return price_raw.replace(',', '').replace(' ', '')
+        return price_raw.replace(',', '').replace(' ', '').encode(ENCODING)
 
     def extract_num(self, raw_field):
         return raw_field.split(' ')[0].replace(',', '')
