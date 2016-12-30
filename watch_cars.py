@@ -107,7 +107,7 @@ class Car:
 
     def __init__(self, url, tree):
         self.name = self.strip_xml_special_chars(
-            self.extract_data(tree, '//*[@class="ver30black"]/strong'))
+            self.extract_data(tree, '//*[contains(@class, "ver30black")]/strong'))
 
         self.url = url
         self.price = self.extract_price(
