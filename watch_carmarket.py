@@ -19,7 +19,7 @@ class CarCrawler:
 
     EXECUTION_TIME_FORMAT = "%Y-%m-%d-%H-%M-%S"
 
-    CAR_CONTAINERS_XPATH = '/div[contains(@class, "cmOffersListItem")]'
+    CAR_CONTAINERS_XPATH = '//div[contains(@class, "cmOffersListItem")]'
     CAR_URLS_XPATH = "//a[@class='cmOffersListLink']/@href"
     NEXT_PAGE_URL_XPATH = "//li[@class='next']/a/@href"
     CAR_LISTED_NAME_XPATH = '//span[@class="cmOffersListName"]'
